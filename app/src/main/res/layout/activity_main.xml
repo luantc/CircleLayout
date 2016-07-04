@@ -1,13 +1,17 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+android:background="@color/colorPrimaryDark"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.luantc.test.CircleLayout
         android:id="@+id/pie"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/white"
+        android:layout_gravity="center"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        app:innerRadius="80dp"
+        app:innerCircle="@color/colorPrimary"
+        android:duplicateParentState="true"
         app:layoutMode="pie" >
 
         <View
@@ -45,78 +49,6 @@
             android:background="@drawable/e" />
     </com.luantc.test.CircleLayout>
 
-    <com.luantc.test.CircleLayout
-        android:id="@+id/normal"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/white"
-        android:visibility="gone" >
 
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#ff0000" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#00ff00" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#0000ff" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#ffff00" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#ff00ff" />
-    </com.luantc.test.CircleLayout>
-
-    <com.luantc.test.CircleLayout
-        android:id="@+id/normalWithRange"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/white"
-        android:visibility="gone"
-        app:angleOffset="200"
-        app:angleRange="230" >
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#ff0000" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#00ff00" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#0000ff" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#ffff00" />
-
-        <View
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="#ff00ff" />
-    </com.luantc.test.CircleLayout>
-
-    <Button
-        android:id="@+id/switchBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Normal" />
 
 </FrameLayout>

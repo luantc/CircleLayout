@@ -6,6 +6,7 @@ package com.luantc.test;
 import java.util.HashSet;
 import java.util.Set;
 
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -27,6 +28,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+
+import com.luantc.test.animation.ChartAnimator;
 
 public class CircleLayout extends ViewGroup {
 
@@ -61,15 +64,17 @@ public class CircleLayout extends ViewGroup {
     private Canvas mCachedCanvas;
     private Set<View> mDirtyViews = new HashSet<View>();
     private boolean mCached = false;
+    ChartAnimator mAnimator;
 
     public CircleLayout(Context context) {
         this(context, null);
+        init();
     }
 
     @SuppressLint("NewApi")
     public CircleLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-
+init();
         mDividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -107,13 +112,28 @@ public class CircleLayout extends ViewGroup {
         }
     }
 
+    private void init() {
+        if (android.os.Build.VERSION.SDK_INT < 11)
+            mAnimator = new ChartAnimator();
+        else
+            mAnimator = new ChartAnimator(new ValueAnimator.AnimatorUpdateListener() {
+
+                @Override
+                public void onAnimationUpdate(ValueAnimator animation) {
+                    // ViewCompat.postInvalidateOnAnimation(Chart.this);
+                    postInvalidate();
+                }
+            });
+    }
 
     public void setLayoutMode(int mode) {
         mLayoutMode = mode;
         requestLayout();
         invalidate();
     }
-
+    public void animateY(int durationMillis) {
+        mAnimator.animateY(durationMillis);
+    }
     public int getLayoutMode() {
         return mLayoutMode;
     }
@@ -222,7 +242,7 @@ public class CircleLayout extends ViewGroup {
         }
     }
 
-    private LayoutParams layoutParams(View child) {
+    public LayoutParams layoutParams(View child) {
         return (LayoutParams) child.getLayoutParams();
     }
 
@@ -553,8 +573,8 @@ public class CircleLayout extends ViewGroup {
 
     public static class LayoutParams extends ViewGroup.LayoutParams {
 
-        private float startAngle;
-        private float endAngle;
+        public float startAngle;
+        public float endAngle;
 
         public float weight = 1f;
 
