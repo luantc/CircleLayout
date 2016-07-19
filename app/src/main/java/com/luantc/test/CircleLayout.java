@@ -3,17 +3,21 @@ package com.luantc.test;
 /**
  * Created by luantruong on 6/30/16.
  */
+
 import java.util.HashSet;
 import java.util.Set;
 
 import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.PointF;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
@@ -66,15 +70,25 @@ public class CircleLayout extends ViewGroup {
     private boolean mCached = false;
     ChartAnimator mAnimator;
 
+    /**
+     * holds the raw version of the current rotation angle of the chart
+     */
+    private float mRawRotationAngle = 270f;
+
+    private float mPadding = 7.5f;
+    Context mContext;
+
     public CircleLayout(Context context) {
         this(context, null);
+        mContext = context;
         init();
     }
 
     @SuppressLint("NewApi")
     public CircleLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-init();
+        mContext = context;
+        init();
         mDividerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mCirclePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -84,7 +98,7 @@ init();
             int dividerColor = a.getColor(R.styleable.CircleLayout_sliceDivider, android.R.color.darker_gray);
             mInnerCircle = a.getDrawable(R.styleable.CircleLayout_innerCircle);
 
-            if(mInnerCircle instanceof ColorDrawable) {
+            if (mInnerCircle instanceof ColorDrawable) {
                 int innerColor = a.getColor(R.styleable.CircleLayout_innerCircle, android.R.color.white);
                 mCirclePaint.setColor(innerColor);
             }
@@ -107,13 +121,13 @@ init();
         mXferPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
         //Turn off hardware acceleration if possible
-        if(Build.VERSION.SDK_INT >= 11) {
+        if (Build.VERSION.SDK_INT >= 11) {
             setLayerType(LAYER_TYPE_SOFTWARE, null);
         }
     }
 
     private void init() {
-        if (android.os.Build.VERSION.SDK_INT < 11)
+        if (Build.VERSION.SDK_INT < 11)
             mAnimator = new ChartAnimator();
         else
             mAnimator = new ChartAnimator(new ValueAnimator.AnimatorUpdateListener() {
@@ -131,9 +145,11 @@ init();
         requestLayout();
         invalidate();
     }
+
     public void animateY(int durationMillis) {
         mAnimator.animateY(durationMillis);
     }
+
     public int getLayoutMode() {
         return mLayoutMode;
     }
@@ -144,13 +160,13 @@ init();
 
         final float minDimen = width > height ? height : width;
 
-        float radius = (minDimen - mInnerRadius)/2f;
+        float radius = (minDimen - mInnerRadius) / 2f;
 
         return (int) radius;
     }
 
     public void getCenter(PointF p) {
-        p.set(getWidth()/2f, getHeight()/2);
+        p.set(getWidth() / 2f, getHeight() / 2);
     }
 
     public void setAngleOffset(float offset) {
@@ -221,7 +237,7 @@ init();
 
         setMeasuredDimension(width, height);
 
-        if(mSrc != null && (mSrc.getWidth() != width || mSrc.getHeight() != height)) {
+        if (mSrc != null && (mSrc.getWidth() != width || mSrc.getHeight() != height)) {
             mDst.recycle();
             mSrc.recycle();
             mDrawingCache.recycle();
@@ -231,7 +247,7 @@ init();
             mDrawingCache = null;
         }
 
-        if(mSrc == null) {
+        if (mSrc == null) {
             mSrc = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             mDst = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             mDrawingCache = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
@@ -253,7 +269,7 @@ init();
 
         float totalWeight = 0f;
 
-        for(int i=0; i<childs; i++) {
+        for (int i = 0; i < childs; i++) {
             final View child = getChildAt(i);
 
             LayoutParams lp = layoutParams(child);
@@ -265,37 +281,39 @@ init();
         final int height = getHeight();
 
         final float minDimen = width > height ? height : width;
-        final float radius = (minDimen - mInnerRadius)/2f;
+        final float radius = (minDimen - mInnerRadius) / 2f;
 
-        mBounds.set(width/2 - minDimen/2, height/2 - minDimen/2, width/2 + minDimen/2, height/2 + minDimen/2);
+        mBounds.set(width / 2 - minDimen / 2 + mPadding, height / 2 - minDimen / 2 + mPadding, width / 2 + minDimen / 2 - mPadding, height / 2 + minDimen / 2 - mPadding);
 
         float startAngle = mAngleOffset;
 
-        for(int i=0; i<childs; i++) {
+        for (int i = 0; i < childs; i++) {
             final View child = getChildAt(i);
 
             final LayoutParams lp = layoutParams(child);
 
             //final float angle = mAngleRange /totalWeight * lp.weight;
             float angle = 0;
-            if(i == (childs-1)){
+            if (i == (childs - 1)) {
 
             }
-            angle = mAngleRange * (Float.parseFloat(child.getTag().toString())/100);
-            final float centerAngle = startAngle + angle/2f;
+
+            ViewModel model = (ViewModel) child.getTag();
+            angle = mAngleRange * (model.getPercentage() / 100);
+            final float centerAngle = startAngle + angle / 2f;
             final int x;
             final int y;
 
-            if(childs > 1) {
-                x = (int) (radius * Math.cos(Math.toRadians(centerAngle))) + width/2;
-                y = (int) (radius * Math.sin(Math.toRadians(centerAngle))) + height/2;
+            if (childs > 1) {
+                x = (int) (radius * Math.cos(Math.toRadians(centerAngle))) + width / 2;
+                y = (int) (radius * Math.sin(Math.toRadians(centerAngle))) + height / 2;
             } else {
-                x = width/2;
-                y = height/2;
+                x = width / 2;
+                y = height / 2;
             }
 
-            final int halfChildWidth = child.getMeasuredWidth()/2;
-            final int halfChildHeight = child.getMeasuredHeight()/2;
+            final int halfChildWidth = child.getMeasuredWidth() / 2;
+            final int halfChildHeight = child.getMeasuredHeight() / 2;
 
             final int left = lp.width != LayoutParams.FILL_PARENT ? x - halfChildWidth : 0;
             final int top = lp.height != LayoutParams.FILL_PARENT ? y - halfChildHeight : 0;
@@ -304,7 +322,7 @@ init();
 
             child.layout(left, top, right, bottom);
 
-            if(left != child.getLeft() || top != child.getTop()
+            if (left != child.getLeft() || top != child.getTop()
                     || right != child.getRight() || bottom != child.getBottom()
                     || lp.startAngle != startAngle
                     || lp.endAngle != startAngle + angle) {
@@ -330,7 +348,7 @@ init();
     protected LayoutParams generateLayoutParams(ViewGroup.LayoutParams p) {
         LayoutParams lp = new LayoutParams(p.width, p.height);
 
-        if(p instanceof LinearLayout.LayoutParams) {
+        if (p instanceof LinearLayout.LayoutParams) {
             lp.weight = ((LinearLayout.LayoutParams) p).weight;
         }
 
@@ -349,17 +367,17 @@ init();
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if(mLayoutMode == LAYOUT_NORMAL) {
+        if (mLayoutMode == LAYOUT_NORMAL) {
             return super.dispatchTouchEvent(ev);
         }
 
         final int action = ev.getAction();
-        final float x = ev.getX() - getWidth()/2f;
-        final float y = ev.getY() - getHeight()/2f;
+        final float x = ev.getX() - getWidth() / 2f;
+        final float y = ev.getY() - getHeight() / 2f;
 
-        if(action == MotionEvent.ACTION_DOWN) {
+        if (action == MotionEvent.ACTION_DOWN) {
 
-            if(mMotionTarget != null) {
+            if (mMotionTarget != null) {
                 MotionEvent cancelEvent = MotionEvent.obtain(ev);
                 cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
 
@@ -371,19 +389,19 @@ init();
                 mMotionTarget = null;
             }
 
-            final float radius = (float) Math.sqrt(x*x + y*y);
+            final float radius = (float) Math.sqrt(x * x + y * y);
 
-            if(radius < mInnerRadius || radius > getWidth()/2f || radius > getHeight()/2f) {
+            if (radius < mInnerRadius || radius > getWidth() / 2f || radius > getHeight() / 2f) {
                 return false;
             }
 
             float angle = (float) Math.toDegrees(Math.atan2(y, x));
 
-            if(angle < 0) angle += mAngleRange;
+            if (angle < 0) angle += mAngleRange;
 
             final int childs = getChildCount();
 
-            for(int i=0; i<childs; i++) {
+            for (int i = 0; i < childs; i++) {
                 final View child = getChildAt(i);
                 final LayoutParams lp = layoutParams(child);
 
@@ -391,20 +409,20 @@ init();
                 float endAngle = lp.endAngle % mAngleRange;
                 float touchAngle = angle;
 
-                if(startAngle > endAngle) {
-                    if(touchAngle < startAngle && touchAngle < endAngle) {
+                if (startAngle > endAngle) {
+                    if (touchAngle < startAngle && touchAngle < endAngle) {
                         touchAngle += mAngleRange;
                     }
 
                     endAngle += mAngleRange;
                 }
 
-                if(startAngle <= touchAngle && endAngle >= touchAngle) {
+                if (startAngle <= touchAngle && endAngle >= touchAngle) {
                     ev.offsetLocation(-child.getLeft(), -child.getTop());
 
                     boolean dispatched = child.dispatchTouchEvent(ev);
 
-                    if(dispatched) {
+                    if (dispatched) {
                         mMotionTarget = child;
 
                         return true;
@@ -415,12 +433,12 @@ init();
                     }
                 }
             }
-        } else if(mMotionTarget != null) {
+        } else if (mMotionTarget != null) {
             ev.offsetLocation(-mMotionTarget.getLeft(), -mMotionTarget.getTop());
 
             mMotionTarget.dispatchTouchEvent(ev);
 
-            if(action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+            if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
                 mMotionTarget = null;
             }
         }
@@ -429,6 +447,7 @@ init();
     }
 
     private void drawChild(Canvas canvas, View child, LayoutParams lp) {
+
         mSrcCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         mDstCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
@@ -438,7 +457,6 @@ init();
         int childTop = child.getTop();
         int childRight = child.getRight();
         int childBottom = child.getBottom();
-        String childData = child.getTag().toString();
         mSrcCanvas.clipRect(childLeft, childTop, childRight, childBottom, Op.REPLACE);
         mSrcCanvas.translate(childLeft, childTop);
 
@@ -452,18 +470,35 @@ init();
         float sweepAngle = (lp.endAngle - lp.startAngle) % 361;
 
         mDstCanvas.drawArc(mBounds, lp.startAngle, sweepAngle, true, mXferPaint);
+
         mXferPaint.setXfermode(mXfer);
         mDstCanvas.drawBitmap(mSrc, 0f, 0f, mXferPaint);
+        ViewModel model = (ViewModel) child.getTag();
+        if(model.isNeedHighlight()) {
+            Paint border = new Paint(Paint.ANTI_ALIAS_FLAG);
+            border.setXfermode(null);
+            border.setAntiAlias(true);
+            border.setDither(true);
+            border.setColor(Color.WHITE);
+            border.setStyle(Paint.Style.STROKE);
+            border.setStrokeJoin(Paint.Join.ROUND);
+            border.setStrokeCap(Paint.Cap.ROUND);
+            RectF newBound = new RectF();
+            newBound.set(mBounds.left, mBounds.top,mBounds.right,mBounds.bottom);
+            //border.setPathEffect(new CornerPathEffect(10) );
+            border.setStrokeWidth(7.5f); // set stroke width
 
+            mDstCanvas.drawArc(newBound, lp.startAngle, sweepAngle-0.8f, true, border);
+        }
         canvas.drawBitmap(mDst, 0f, 0f, null);
     }
 
     private void redrawDirty(Canvas canvas) {
-        for(View child : mDirtyViews) {
+        for (View child : mDirtyViews) {
             drawChild(canvas, child, layoutParams(child));
         }
 
-        if(mMotionTarget != null) {
+        if (mMotionTarget != null) {
             drawChild(canvas, mMotionTarget, layoutParams(mMotionTarget));
         }
     }
@@ -471,11 +506,11 @@ init();
     private void drawDividers(Canvas canvas, float halfWidth, float halfHeight, float radius) {
         final int childs = getChildCount();
 
-        if(childs < 2) {
+        if (childs < 2) {
             return;
         }
 
-        for(int i=0; i<childs; i++) {
+        for (int i = 0; i < childs; i++) {
             final View child = getChildAt(i);
             LayoutParams lp = layoutParams(child);
 
@@ -484,7 +519,7 @@ init();
                     radius * (float) Math.sin(Math.toRadians(lp.startAngle)) + halfHeight,
                     mDividerPaint);
 
-            if(i == childs-1) {
+            if (i == childs - 1) {
                 canvas.drawLine(halfWidth, halfHeight,
                         radius * (float) Math.cos(Math.toRadians(lp.endAngle)) + halfWidth,
                         radius * (float) Math.sin(Math.toRadians(lp.endAngle)) + halfHeight,
@@ -494,8 +529,8 @@ init();
     }
 
     private void drawInnerCircle(Canvas canvas, float halfWidth, float halfHeight) {
-        if(mInnerCircle != null) {
-            if(!(mInnerCircle instanceof ColorDrawable)) {
+        if (mInnerCircle != null) {
+            if (!(mInnerCircle instanceof ColorDrawable)) {
                 mInnerCircle.setBounds(
                         (int) halfWidth - mInnerRadius,
                         (int) halfHeight - mInnerRadius,
@@ -511,23 +546,23 @@ init();
 
     @Override
     protected void dispatchDraw(Canvas canvas) {
-        if(mLayoutMode == LAYOUT_NORMAL) {
+        if (mLayoutMode == LAYOUT_NORMAL) {
             super.dispatchDraw(canvas);
             return;
         }
 
-        if(mSrc == null || mDst == null || mSrc.isRecycled() || mDst.isRecycled()) {
+        if (mSrc == null || mDst == null || mSrc.isRecycled() || mDst.isRecycled()) {
             return;
         }
 
         final int childs = getChildCount();
 
-        final float halfWidth = getWidth()/2f;
-        final float halfHeight = getHeight()/2f;
+        final float halfWidth = getWidth() / 2f;
+        final float halfHeight = getHeight() / 2f;
 
         final float radius = halfWidth > halfHeight ? halfHeight : halfWidth;
 
-        if(mCached && mDrawingCache != null && !mDrawingCache.isRecycled() && mDirtyViews.size() < childs/2) {
+        if (mCached && mDrawingCache != null && !mDrawingCache.isRecycled() && mDirtyViews.size() < childs / 2) {
             canvas.drawBitmap(mDrawingCache, 0f, 0f, null);
 
             redrawDirty(canvas);
@@ -543,17 +578,17 @@ init();
 
         Canvas sCanvas = null;
 
-        if(mCachedCanvas != null) {
+        if (mCachedCanvas != null) {
             sCanvas = canvas;
             canvas = mCachedCanvas;
         }
 
         Drawable bkg = getBackground();
-        if(bkg != null) {
+        if (bkg != null) {
             bkg.draw(canvas);
         }
 
-        for(int i=0; i<childs; i++) {
+        for (int i = 0; i < childs; i++) {
             final View child = getChildAt(i);
             LayoutParams lp = layoutParams(child);
 
@@ -564,7 +599,7 @@ init();
 
         drawInnerCircle(canvas, halfWidth, halfHeight);
 
-        if(mCachedCanvas != null) {
+        if (mCachedCanvas != null) {
             sCanvas.drawBitmap(mDrawingCache, 0f, 0f, null);
             mDirtyViews.clear();
             mCached = true;
@@ -587,4 +622,13 @@ init();
         }
     }
 
+    /**
+     * returns an angle between 0.f < 360.f (not less than zero, less than 360)
+     */
+    public static float getNormalizedAngle(float angle) {
+        while (angle < 0.f)
+            angle += 360.f;
+
+        return angle % 360.f;
+    }
 }

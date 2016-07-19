@@ -5,6 +5,7 @@ android:background="@color/colorPrimaryDark"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <com.luantc.test.CircleLayout
+        android:padding="10dp"
         android:id="@+id/pie"
         android:layout_gravity="center"
         android:layout_width="300dp"
