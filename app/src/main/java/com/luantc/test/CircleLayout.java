@@ -483,12 +483,13 @@ public class CircleLayout extends ViewGroup {
             border.setStyle(Paint.Style.STROKE);
             border.setStrokeJoin(Paint.Join.ROUND);
             border.setStrokeCap(Paint.Cap.ROUND);
-            RectF newBound = new RectF();
-            newBound.set(mBounds.left, mBounds.top,mBounds.right,mBounds.bottom);
+            //set padding for border if needed
+            /*RectF newBound = new RectF();
+            newBound.set(mBounds.left, mBounds.top,mBounds.right,mBounds.bottom);*/
             //border.setPathEffect(new CornerPathEffect(10) );
             border.setStrokeWidth(7.5f); // set stroke width
 
-            mDstCanvas.drawArc(newBound, lp.startAngle, sweepAngle-0.8f, true, border);
+            mDstCanvas.drawArc(mBounds, lp.startAngle, sweepAngle-0.8f, true, border);
         }
         canvas.drawBitmap(mDst, 0f, 0f, null);
     }

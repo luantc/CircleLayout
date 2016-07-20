@@ -41,11 +41,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pie3 = (View) findViewById(R.id.pie3);
         pie4 = (View) findViewById(R.id.pie4);
         pie5 = (View) findViewById(R.id.pie5);
-        pie1.setTag(new ViewModel(10,false));
-        pie2.setTag(new ViewModel(20,true));
-        pie3.setTag(new ViewModel(25,false));
-        pie4.setTag(new ViewModel(30,false));
-        pie5.setTag(new ViewModel(15,false));
+        pie1.setTag(new ViewModel(10, false));
+        pie2.setTag(new ViewModel(20, true));
+        pie3.setTag(new ViewModel(25, false));
+        pie4.setTag(new ViewModel(30, false));
+        pie5.setTag(new ViewModel(15, false));
         pie1.setOnClickListener(this);
         pie4.setOnClickListener(this);
         pie2.setOnClickListener(this);
@@ -59,8 +59,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pie = (CircleLayout) findViewById(R.id.pie);
 
 
-        pie.animateY(6000);
-        pie.setOnTouchListener(this);
+        //pie.animateY(6000);
+        //pie.setOnTouchListener(this);
 
     }
 
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(final View v) {
         //v.setBackgroundDrawable(getResources().getDrawable(R.drawable.a));
         //pie.requestLayout();
-        Toast.makeText(getApplicationContext(), String.valueOf(((ViewModel)v.getTag()).getPercentage()), Toast.LENGTH_SHORT).show();
+        Toast.makeText(getApplicationContext(), String.valueOf(((ViewModel) v.getTag()).getPercentage()), Toast.LENGTH_SHORT).show();
         Animation mAni = AnimationUtils.loadAnimation(this, R.anim.rotate_animation);
         //pie.startAnimation(mAni);
 
@@ -78,9 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         animSet.setFillEnabled(true);
 
         CircleLayout.LayoutParams params = pie.layoutParams(v);
-        Log.d("angle", String.valueOf(params.startAngle)+ "  >>> "+String.valueOf(params.endAngle));
-        int start = (int) ((params.endAngle + params.startAngle)/2);
-        pie.animate().rotation(180-start);
+        Log.d("angle", String.valueOf(params.startAngle) + "  >>> " + String.valueOf(params.endAngle));
+        int start = (int) ((params.endAngle + params.startAngle) / 2);
+        pie.animate().rotation(180 - start);
 
 
         /*
